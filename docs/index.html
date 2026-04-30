@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>natu-qbo · OAuth Redirect</title>
+<meta name="robots" content="noindex">
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 3em auto; padding: 0 1em; line-height: 1.5; color: #222; }
+  code { background: #f4f4f4; padding: 0.1em 0.3em; border-radius: 3px; }
+  .err { color: #b00; }
+</style>
+</head>
+<body>
+<h1>natu-qbo · OAuth Redirect</h1>
+<p id="status">Forwarding the QBO authorization code to your local app...</p>
+<noscript><p class="err">JavaScript is required to complete the redirect.</p></noscript>
+<script>
+  // This page is a stateless bouncer. It receives ?code=...&state=...&realmId=... from
+  // Intuit and forwards them to the local Python server running on the user's machine.
+  // The local port is encoded in the `state` param as: <port>_<random>
+  const qs = window.location.search;
+  const params = new URLSearchParams(qs);
+  const state = params.get("state") || "";
+  const portMatch = state.match(/^(\d+)_/);
+  const port = portMatch ? portMatch[1] : "8765";
+  const target = "http://localhost:" + port + "/callback" + qs;
+  document.getElementById("status").innerHTML =
+    'Forwarding to <code>' + target + '</code>... ' +
+    'If nothing happens, make sure <code>python -m src.auth</code> is running on port ' + port + '.';
+  window.location.replace(target);
+</script>
+</body>
+</html>

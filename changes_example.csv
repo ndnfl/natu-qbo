@@ -1,0 +1,8 @@
+txn_type,txn_id,line_id,field,new_value
+JournalEntry,1234,1,account,Marketing Expense
+JournalEntry,1234,1,class,Engineering
+Bill,5678,,vendor,Amazon Web Services
+Bill,5678,,location,Boston Office
+Bill,5678,1,memo,AWS hosting Q1 2026
+Invoice,9012,,customer,Acme Corp
+Purchase,3456,2,account,Office Supplies
