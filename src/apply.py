@@ -127,10 +127,11 @@ def apply_change(
 
 
 def build_update_body(txn: dict, modified: set[str]) -> dict:
-    body = {"Id": txn["Id"], "SyncToken": txn["SyncToken"]}
-    for key in modified:
-        body[key] = txn[key]
-    return body
+    # QBO's sparse update still requires entity-specific "key" fields (e.g. Purchase
+    # needs PaymentType and AccountRef even when only Line was modified). Send the
+    # entire fetched txn back, minus server-managed read-only fields. The mutated
+    # fields are already in place because we mutated `txn` directly.
+    return {k: v for k, v in txn.items() if k not in ("MetaData",)}
 
 
 def main() -> int:

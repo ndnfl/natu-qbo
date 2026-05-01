@@ -49,7 +49,8 @@ def build_query(txn_type: str, args: argparse.Namespace) -> str:
         client_for_lookup = QBOClient()
         ref = client_for_lookup.lookup_ref("Vendor", args.vendor)
         if txn_type == "Purchase":
-            where.append(f"EntityRef = '{ref['value']}'")
+            # Purchase.EntityRef is not queryable via SQL; fall back to client-side filter.
+            args._purchase_vendor_id = ref["value"]
         else:
             where.append(f"VendorRef = '{ref['value']}'")
 
@@ -103,6 +104,10 @@ def main() -> int:
     except QBOError as e:
         print(f"Query failed: {e}", file=sys.stderr)
         return 1
+
+    purchase_vendor_id = getattr(args, "_purchase_vendor_id", None)
+    if purchase_vendor_id:
+        rows = [r for r in rows if (r.get("EntityRef") or {}).get("value") == purchase_vendor_id]
 
     if not rows:
         print("No matches.")

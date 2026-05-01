@@ -77,19 +77,17 @@ class QBOClient:
             return self._lookup_cache[key]
         # Escape single quotes for QBO SQL
         escaped = name.replace("'", "\\'")
-        rows = self.query(f"SELECT Id, Name FROM {entity_type} WHERE Name = '{escaped}'")
+        # Customer/Vendor/Employee use DisplayName; everything else uses Name.
+        name_field = "DisplayName" if entity_type in ("Customer", "Vendor", "Employee") else "Name"
+        rows = self.query(
+            f"SELECT Id, {name_field} FROM {entity_type} WHERE {name_field} = '{escaped}'"
+        )
         if not rows:
-            # Some entities use DisplayName instead of Name
-            if entity_type in ("Customer", "Vendor", "Employee"):
-                rows = self.query(
-                    f"SELECT Id, DisplayName FROM {entity_type} WHERE DisplayName = '{escaped}'"
-                )
-        if not rows:
-            raise QBOError(f"No {entity_type} found with name '{name}'")
+            raise QBOError(f"No {entity_type} found with {name_field} '{name}'")
         if len(rows) > 1:
-            raise QBOError(f"Ambiguous {entity_type} name '{name}': {len(rows)} matches")
+            raise QBOError(f"Ambiguous {entity_type} {name_field} '{name}': {len(rows)} matches")
         row = rows[0]
-        ref = {"value": row["Id"], "name": row.get("Name") or row.get("DisplayName")}
+        ref = {"value": row["Id"], "name": row.get(name_field)}
         self._lookup_cache[key] = ref
         return ref
 
