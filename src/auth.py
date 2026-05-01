@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 AUTH_URL = "https://appcenter.intuit.com/connect/oauth2"
-TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens"
+TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
 SCOPE = "com.intuit.quickbooks.accounting"
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -117,9 +117,15 @@ class _CallbackHandler(BaseHTTPRequestHandler):
         params = urllib.parse.parse_qs(parsed.query)
         state = params.get("state", [""])[0]
         if state != _CallbackHandler.expected_state:
+            print(
+                f"\n[state mismatch]\n  received: {state}\n  expected: {_CallbackHandler.expected_state}\n"
+                f"This usually means a stale browser tab from a previous run is firing against a fresh server.\n",
+                file=sys.stderr,
+            )
             self.send_response(400)
+            self.send_header("Content-Type", "text/plain")
             self.end_headers()
-            self.wfile.write(b"State mismatch")
+            self.wfile.write(b"State mismatch. Close this tab, kill the python process, and re-run python -m src.auth.")
             return
         if "error" in params:
             _CallbackHandler.result = {"error": params["error"][0]}
